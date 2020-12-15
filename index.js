@@ -8,6 +8,7 @@ const app = express();
 
 // Add database package and connection string
 const { Pool } = require('pg');
+const { render } = require("ejs");
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -90,34 +91,56 @@ app.post("/search", async (req, res) => {
 
 // GET /create
 app.get("/create", (req, res) => {
-    res.render("create", { model: {} });
+    res.render("create", { model: {}, type: "GET" });
 });
 
 // POST /create
 app.post("/create", async (req, res) => {
-    const customer = [req.body.cusId, req.body.cusFname, req.body.cusLname, req.body.cusState, req.body.cusSalesYTD, req.body.cusSalesPrev];
-    await dblib.insertProduct(customer);
-    res.render("search");
+    //const customer = [req.body.cusId, req.body.cusFname, req.body.cusLname, req.body.cusState, req.body.cusSalesYTD, req.body.cusSalesPrev];
+    const customer = req.body;
+    console.log (req.body);
+    //await dblib.insertProduct(customer);
+    dblib.insertProduct(customer)
+        .then (insertObject => {
+            res.render("create", { model: customer, trans: insertObject.trans, msg: insertObject.msg, type: "POST"});
+        } )
+    
 });
 
 // GET /edit/5
 app.get("/edit/:id", (req, res) => {
-    const id = req.params.cus_Id;
-    const sql = "SELECT * FROM customer WHERE cusid = ?";
-    pool.query(sql, id, (err, row) => {
-      // if (err) ...
-      res.render("edit", { model: row });
-    });
+    const id = [req.params.id];
+    const sql = "SELECT * FROM customer WHERE cusid = $1";
+    //pool.query(sql, id, (err, row) => {
+    pool.query(sql, id) 
+        .then (editQuery => {
+            console.log(editQuery.rows[0]);
+            res.render("edit", {model: editQuery.rows[0], type: "GET", message: "success"});
+        }) 
+        .catch (err => {
+            console.log(err.message);
+            res.render("edit", {model: err.message, type: "GET", message: "fail"});
+        });
+    // if (err) ...
+    //res.render("edit", { model: row });
 });
+//});
 
 // POST /edit/5
-app.post("/edit/:id", (req, res) => {
-    const id = req.params.cus_Id;
-    const customer = [req.body.cus_Fname, req.body.cus_Lname, req.body.cus_State, req.body.cus_SalesYTD, req.body.cus_SalesPrev, id];
-    const sql = "UPDATE customer SET cusfname = ?, cuslname = ?, cusstate = ? , cussalesyrd = ?, cussalesprev = ? WHERE (cusid = ?)";
-    pool.query(sql, customer, err => {
-      // if (err) ...
-      res.redirect("/search");
+app.post("/edit", (req, res) => {
+    const params = Object.values(req.body);
+    const sql = "UPDATE customer SET cusfname = $2, cuslname = $3, cusstate = $4 , cussalesytd = $5, cussalesprev = $6 WHERE (cusid = $1)";
+    pool.query(sql, params)
+    .then (editResult => {
+        if (editResult.rowCount === 1)
+        {
+            res.render("edit", {type: "POST", trans: "success", model: req.body});
+        } else {
+            res.render("edit", {type: "POST", trans: "error", msg: "SQL Error", model: req.body});
+        }
+    })
+    .catch (err => {
+        res.render("edit", {type: "POST", trans: "error", msg: err.message, model: req.body});
     });
 });
 

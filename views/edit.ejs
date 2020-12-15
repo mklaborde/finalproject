@@ -2,7 +2,7 @@
 
 <h1>Update a record</h1>
 
-<form action="/edit/:id" method="post">
+<form action="/edit" method="post">
   <div class="form-horizontal">
 
     <%- include("_editor") -%>
@@ -16,5 +16,13 @@
     </div>
   </div>
 </form>
+<% if (type === "POST") { %>
+  <% if (trans === "success") { %>
+    <h2>Customer updated successfully</h2>
+  <% } else { %>
+    <h2>Error:</h2>
+    <p><%= msg %></p>
+  <% } %>
+<% } %>
 
 <%- include("_footer") -%>

@@ -17,4 +17,14 @@
   </div>
 </form>
 
+<% if (type === "POST") { %>
+  <% if (trans === "success") { %>
+    <h2>Customer inserted successfully</h2>
+    <p><%= msg %></p>
+  <% } else { %>
+    <h2>Error:</h2>
+    <p><%= msg %></p>
+  <% } %>
+<% } %>
+
 <%- include("_footer") -%>
