@@ -240,23 +240,37 @@ app.post("/input",  upload.single('filename'), (req, res) => {
      //Read file line by line, inserting records
      const buffer = req.file.buffer; 
      const lines = buffer.toString().split(/\r?\n/);
-     inputAttempt = "";
-     message = "";
+     customers=[];     
 
-     lines.forEach(async line => {
+     lines.forEach(line => {
           //console.log(line);
           customer = line.split(",");
           //console.log(customer);
-          const sql = `INSERT INTO customer (cusId, cusFname, cusLname, cusState, cusSalesYTD, cusSalesPrev)
-          VALUES ($1, $2, $3, $4, $5, $6)`;
-          inputAttempt = await dblib.insertProduct(customer);
-          
-          console.log(inputAttempt)
-          message += inputAttempt.msg;
-
+          customers.push(customer);
      });
-     message += `Processing Complete - Processed ${lines.length} records`;
-     res.send(message);
+     numInserted=0;
+     numFailed=0;
+     errorMessage="";
+     (async () => {
+        for (customer of customers) {
+            const result = await dblib.insertProduct(customer);
+            if (result.trans === "success") {
+                numInserted++;
+            } else {
+                numFailed++;
+                errorMessage += `${result.msg} <br>`;
+            };
+        };    
+        res.send({numberInserted: numInserted, numberFailed: numFailed, msg: errorMessage});
+        /*console.log(`Records processed: ${numInserted + numFailed}`);
+        console.log(`Records successfully inserted: ${numInserted}`);
+        console.log(`Records with insertion errors: ${numFailed}`);
+        if(numFailed > 0) {
+            console.log("Error Details:");
+            console.log(errorMessage);
+        };*/
+    })()
+    
  });
 
 //GET - Output

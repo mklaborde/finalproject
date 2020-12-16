@@ -17,21 +17,36 @@
       // Create a FormData object, passing the form as a parameter
       const formData = new FormData(e.target);
       // Send form data to the server with an asynchronous POST request
+      const resultElement = document.getElementById("result");
+      resultElement.innerText = "Records Processing, please wait...";
       fetch("/input", {
         method: "POST",
         body: formData
       })
-        .then(response => response.text())
+        .then(response => response.json())
         .then(data => {
-            const resultElement = document.getElementById("result");
-            if (data.substring(0,5) === "Error") {
-                resultElement.innerText = `Error occurred!  ${data}`
+            resultElement.innerText = "";
+            resultElement.innerHTML = `
+                <p>
+                    Records processed: ${data.numberInserted + data.numberFailed} <br>
+                    Records successfully inserted: ${data.numberInserted} <br>
+                    Records with insertion errors: ${data.numberFailed} <br>
+                </p>`;
+                if(data.numberFailed > 0) {
+                    resultElement.innerHTML += `
+                    <p>    
+                        Error Details: <br>
+                        ${data.msg} <br>
+                    </p>`};
+            //const resultElement = document.getElementById("result");
+            /*if (data.msg.substring(0,5) === "Error") {
+                resultElement.innerText = `Error occurred!  ${data.msg}`
             } else {
                 resultElement.innerText = data;
-            };
+            };*/
         })
         .catch(err => {
-            document.getElementById("message").textContent = `Error: ${err.message}`;
+            resultElement.innerText = `Error: ${err.message}`;
         });
     });
     </script>
