@@ -1,0 +1,47 @@
+<%- include("_header") -%>
+
+<h2>Reports</h2>
+
+<form action="/reports" method="POST">
+    <label for="reports">Choose a report:</label>
+
+    <select name="reports" id="reports">
+      <option value="allByLast">All Customers - Sorted by Customer Last Name, First Name</option>
+      <option value="allBySalesDec">All Customers - Sorted by Current Total Sales Decreasing</option>
+      <option value="threeRandom">Three Random Customers - Promotional Giveaway (Not Repeating)</option>
+    </select> 
+    <input type="submit" value="Find" />
+</form>
+
+<% if (type === "POST") { %>
+    <% if (result.result.length === 0) { %>
+        <h3>No records found!</h3>
+    <% } else { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>Customer ID</th>
+                    <th>Customer First Name</th>
+                    <th>Customer Last Name</th>
+                    <th>Customer State</th>
+                    <th>Customer Sales YTD</th>
+                    <th>Customer Sales Previous</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% result.result.forEach(customer => { %> 
+                    <tr>
+                        <td><%= customer.cusid %></td>
+                        <td><%= customer.cusfname %></td>
+                        <td><%= customer.cuslname %></td>
+                        <td><%= customer.cusstate %></td>
+                        <td><%= customer.cussalesytd %></td>
+                        <td><%= customer.cussalesprev %></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    <% } %>
+<% } %>
+
+<%- include("_footer") -%>   

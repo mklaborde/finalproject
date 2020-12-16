@@ -9,32 +9,32 @@
     <table>
         <tr>
             <td><label for="cus_Id">Customer ID</label>:</td>
-            <td><input type="number" name="cus_Id" id="cus_Id" value="<%= customer.cusId %>" /></td>
+            <td><input type="number" name="cus_Id" id="cus_Id" value="<%= customer.cus_Id %>" /></td>
             <td>(equal)</td>
         </tr>
         <tr>
             <td><label for="cus_Fname">Customer First Name</label>:</td>
-            <td><input type="text" name="cus_Fname" id="cus_Fname" value="<%= customer.cusFname %>" /></td>
+            <td><input type="text" name="cus_Fname" id="cus_Fname" value="<%= customer.cus_Fname %>" /></td>
             <td>(starts with)</td>
         </tr>
         <tr>
             <td><label for="cus_Lname">Customer Last Name</label>:</td>
-            <td><input type="text" name="cus_Lname" id="cus_Lname" value="<%= customer.cusLname %>" /></td>
+            <td><input type="text" name="cus_Lname" id="cus_Lname" value="<%= customer.cus_Lname %>" /></td>
             <td>(starts with)</td>
         </tr>
         <tr>
             <td><label for="cus_State">Customer State</label>:</td>
-            <td><input type="text" name="cus_State" id="cus_State" value="<%= customer.cusState %>" /></td>
+            <td><input type="text" name="cus_State" id="cus_State" maxlength="2" value="<%= customer.cus_State %>" /></td>
             <td>(equal)</td>
         </tr>
         <tr>
             <td><label for="cus_SalesYTD">Customer's Sales YTD</label>:</td>
-            <td><input type="text" name="cus_SalesYTD" id="cus_SalesYTD" value="<%= customer.cusSalesYTD %>" /></td>
+            <td><input type="number" name="cus_SalesYTD" id="cus_SalesYTD" value="<%= customer.cus_SalesYTD %>" /></td>
             <td>(greater than or equal)</td>
         </tr>
         <tr>
             <td><label for="cus_SalesPrev">Customer's previous sales</label>:</td>
-            <td><input type="text" name="cus_SalesPrev" id="cus_SalesPrev" value="<%= customer.cusSalesPrev %>" /></td>
+            <td><input type="number" name="cus_SalesPrev" id="cus_SalesPrev" value="<%= customer.cus_SalesPrev %>" /></td>
             <td>(greater than or equal)</td>
         </tr>
         <tr>
@@ -46,8 +46,7 @@
     </table>
 </form>
 
-<!-- Omitted Error Checking / Needs to be added -->
-<% if (type === "post") { %>
+<% if (type === "POST") { %>
     <% if (result.result.length === 0) { %>
         <h3>No records found!</h3>
     <% } else { %>

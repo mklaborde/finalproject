@@ -59,7 +59,7 @@ app.get("/search", async (req, res) => {
         cusSalesPrev: ""
     };
     res.render("search", {
-        type: "get",
+        type: "GET",
         totRecs: totRecs.totRecords,
         customer: customer
     });
@@ -73,20 +73,71 @@ app.post("/search", async (req, res) => {
     dblib.findProducts(req.body)
         .then(result => {
             res.render("search", {
-                type: "post",
+                type: "POST",
                 totRecs: totRecs.totRecords,
                 result: result,
                 customer: req.body
                 })
-        })
+            })
         .catch(err => {
             res.render("search", {
-                type: "post",
+                type: "POST",
                 totRecs: totRecs.totRecords,
                 result: `Unexpected Error: ${err.message}`,
                 customer: req.body
             });
         });
+});
+
+//GET Reports
+app.get("/reports", (req, res) => {
+    res.render("reports", {
+        type: "GET"
+    });
+});
+
+app.post("/reports", async (req, res) => {
+    customer = {
+        cus_Id: "",
+        cus_Fname: "",
+        cus_Lname: "",
+        cus_State: "",
+        cus_SalesYTD: "",
+        cus_SalesPrev: ""
+    };
+    if (req.body.reports === 'allByLast')
+    {
+        res.render("reports", {
+            type: "POST",
+            result: await dblib.findProductsByFirstandLast(customer),
+            model: req.body
+        });
+    }
+    if (req.body.reports === 'allBySalesDec')
+    {
+        res.render("reports", {
+            type: "POST",
+            result: await dblib.findProductsBySales(customer),
+            model: req.body
+        });
+    }
+    if (req.body.reports === 'threeRandom')
+    {
+        result=[];
+        customers = await dblib.findProducts(customer);
+        for (i=0; i<3; i++)
+        {
+            randomIndex = Math.floor(Math.random() * customers.result.length);
+            result.push(customers.result[randomIndex]);
+        }
+        res.render("reports", {
+            type: "POST",
+            result: {trans: "success", result: result},
+            model: req.body
+        });
+    }
+
+    console.log(req.body);
 });
 
 // GET /create
@@ -96,10 +147,8 @@ app.get("/create", (req, res) => {
 
 // POST /create
 app.post("/create", async (req, res) => {
-    //const customer = [req.body.cusId, req.body.cusFname, req.body.cusLname, req.body.cusState, req.body.cusSalesYTD, req.body.cusSalesPrev];
     const customer = req.body;
     console.log (req.body);
-    //await dblib.insertProduct(customer);
     dblib.insertProduct(customer)
         .then (insertObject => {
             res.render("create", { model: customer, trans: insertObject.trans, msg: insertObject.msg, type: "POST"});
@@ -111,7 +160,6 @@ app.post("/create", async (req, res) => {
 app.get("/edit/:id", (req, res) => {
     const id = [req.params.id];
     const sql = "SELECT * FROM customer WHERE cusid = $1";
-    //pool.query(sql, id, (err, row) => {
     pool.query(sql, id) 
         .then (editQuery => {
             console.log(editQuery.rows[0]);
@@ -121,10 +169,8 @@ app.get("/edit/:id", (req, res) => {
             console.log(err.message);
             res.render("edit", {model: err.message, type: "GET", message: "fail"});
         });
-    // if (err) ...
-    //res.render("edit", { model: row });
 });
-//});
+
 
 // POST /edit/5
 app.post("/edit", (req, res) => {
@@ -146,21 +192,37 @@ app.post("/edit", (req, res) => {
 
 // GET /delete/5
 app.get("/delete/:id", (req, res) => {
-    const id = req.params.id;
-    const sql = "SELECT * FROM customer WHERE cusid = ?";
-    pool.query(sql, id, (err, row) => {
-      // if (err) ...
-      res.render("delete", { model: row });
+    const id = [req.params.id];
+    const sql = "SELECT * FROM customer WHERE cusid = $1";
+        pool.query(sql, id) 
+            .then (deleteQuery => {
+                console.log(deleteQuery.rows[0]);
+                res.render("delete", {model: deleteQuery.rows[0], type: "GET", message: "success"});
+            }) 
+            .catch (err => {
+                console.log(err.message);
+                res.render("delete", {model: err.message, type: "GET", message: "fail"});
+            });
     });
-});
+
 
 // POST /delete/5
-app.post("/delete/:id", (req, res) => {
-    const id = req.params.id;
-    const sql = "DELETE FROM customer WHERE cusid = ?";
-    pool.query(sql, id, err => {
-      // if (err) ...
-      res.redirect("/books");
+app.post("/delete", (req, res) => {
+    const params = [req.body.cusid];
+    const sql = "DELETE FROM customer WHERE (cusid = $1)";
+    console.log(sql);
+    console.log(params);
+    pool.query(sql, params)
+    .then (deleteResult => {
+        if (deleteResult.rowCount === 1)
+        {
+            res.render("delete", {type: "POST", trans: "success", model: req.body});
+        } else {
+            res.render("delete", {type: "POST", trans: "error", msg: "SQL Error", model: req.body});
+        }
+    })
+    .catch (err => {
+        res.render("delete", {type: "POST", trans: "error", msg: err.message, model: req.body});
     });
 });
 
@@ -178,22 +240,22 @@ app.post("/input",  upload.single('filename'), (req, res) => {
      //Read file line by line, inserting records
      const buffer = req.file.buffer; 
      const lines = buffer.toString().split(/\r?\n/);
- 
-     lines.forEach(line => {
+     inputAttempt = "";
+     message = "";
+
+     lines.forEach(async line => {
           //console.log(line);
-          product = line.split(",");
-          //console.log(product);
+          customer = line.split(",");
+          //console.log(customer);
           const sql = `INSERT INTO customer (cusId, cusFname, cusLname, cusState, cusSalesYTD, cusSalesPrev)
           VALUES ($1, $2, $3, $4, $5, $6)`;
-          pool.query(sql, product, (err, result) => {
-              if (err) {
-                  console.log(`Insert Error.  Error message: ${err.message}`);
-              } else {
-                  console.log(`Inserted successfully`);
-              }
-         });
+          inputAttempt = await dblib.insertProduct(customer);
+          
+          console.log(inputAttempt)
+          message += inputAttempt.msg;
+
      });
-     message = `Processing Complete - Processed ${lines.length} records`;
+     message += `Processing Complete - Processed ${lines.length} records`;
      res.send(message);
  });
 

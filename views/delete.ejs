@@ -2,7 +2,7 @@
 
 <h1>Delete a record?</h1>
 
-<form action="/delete/:id" method="post">
+<form action="/delete" method="post">
   <div class="form-horizontal">
 
     <%- include("_display") -%>
@@ -11,10 +11,19 @@
       <label class="col-form-label col-sm-2"></label>
       <div class="col-sm-10">
         <input type="submit" value="Delete" class="btn btn-default btn-danger" />
-        <a class="btn btn-outline-dark cancel" href="/books">Cancel</a>
+        <a class="btn btn-outline-dark cancel" href="/search">Cancel</a>
       </div>
     </div>
   </div>
 </form>
+
+<% if (type === "POST") { %>
+  <% if (trans === "success") { %>
+    <h2>Customer deleted successfully</h2>
+  <% } else { %>
+    <h2>Error:</h2>
+    <p><%= msg %></p>
+  <% } %>
+<% } %>
 
 <%- include("_footer") -%>
